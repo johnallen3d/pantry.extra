@@ -23,14 +23,14 @@ build:
   script: |
     # Branch from the Darwin maintainer of GCC, with a few generic fixes and
     # Apple Silicon support, located at https://github.com/iains/gcc-12-branch
-    # patch -p1 <props/aarch64.diff
+    patch -p1 <props/aarch64.diff
 
-    # sed -i.bak -e 's_m64=../lib64_m64=_' gcc/config/i386/t-linux64
-    # rm gcc/config/i386/t-linux64.bak
+    sed -i.bak -e 's_m64=../lib64_m64=_' gcc/config/i386/t-linux64
+    rm gcc/config/i386/t-linux64.bak
 
-    # mkdir build
+    mkdir build
     cd build
-    # ../configure $ARGS
+    ../configure $ARGS
     make --jobs {{ hw.concurrency }} DESTDIR={{prefix}}
     make install
   env:
