@@ -1,0 +1,31 @@
+distributable:
+  url: https://ftp.gnu.org/gnu/glibc/glibc-{{ version.raw }}.tar.gz
+  strip-components: 1
+
+versions:
+  github: bminor/glibc/tags
+  strip: /^glibc-/
+  ignore: /\.9000$/
+
+build:
+  dependencies:
+    tea.xyz/gx/cc: c99
+    gnu.org/gcc: '*'
+  script: |
+    # numa is linux only
+    if test {{ hw.platform }} != "linux"
+    then
+      touch {{ prefix }}/not-used-on-darwin
+      exit
+    fi
+
+    mkdir build
+    cd build
+
+    ../configure --prefix={{ prefix }}
+    make --jobs {{ hw.concurrency }}
+    make install DESTDIR={{ prefix }}
+
+test:
+  script: |
+    glibc -c "set -o pipefail"

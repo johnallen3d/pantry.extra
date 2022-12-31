@@ -1,0 +1,86 @@
+distributable:
+  url: https://ftp.gnu.org/gnu/gcc/gcc-{{version.raw}}/gcc-{{ version.raw }}.tar.xz
+  strip-components: 1
+
+versions:
+  github: gcc-mirror/gcc/tags
+  strip: /^releases\/gcc-/
+
+dependencies:
+  gnu.org/gmp: '>=4.2'
+  gnu.org/mpfr: '>=3.1.0'
+  gnu.org/mpc: '>=0.8.0'
+
+build:
+  dependencies:
+    tea.xyz/gx/cc: c99
+    gnu.org/make: '*'
+    gnu.org/gmp: '>=4.2'
+    gnu.org/mpfr: '>=3.1.0'
+    gnu.org/mpc: '>=0.8.0'
+    perl.org: '^5.6.1'
+    gnu.org/patch: '*'
+  script: |
+    # Branch from the Darwin maintainer of GCC, with a few generic fixes and
+    # Apple Silicon support, located at https://github.com/iains/gcc-12-branch
+    # patch -p1 <props/aarch64.diff
+
+    # sed -i.bak -e 's_m64=../lib64_m64=_' gcc/config/i386/t-linux64
+    # rm gcc/config/i386/t-linux64.bak
+
+    # mkdir build
+    cd build
+    # ../configure $ARGS
+    make --jobs {{ hw.concurrency }} DESTDIR={{prefix}}
+    make install
+  env:
+    ARGS:
+      - --prefix={{ prefix }}
+      - --libdir={{ prefix }}/lib
+      - --with-pkgversion=tea-GCC-{{version}}
+      - --enable-languages=c,c++,objc,obj-c++
+      - --with-bugurl="https://github.com/teaxyz/pantry.extra/issues"
+      - --disable-bootstrap
+      - --disable-nls
+    linux:
+      ARGS:
+        - "--with-boot-ldflags=-static-libstdc++ -static-libgcc $LDFLAGS"
+        - --disable-multilib
+        - --enable-default-pie
+    darwin:
+      ARGS:
+        # https://en.wikipedia.org/wiki/Darwin_(operating_system)#Darwin_16%E2%80%9319;_OS_X_rebranded_into_macOS
+        - --build={{hw.arch}}-apple-darwin20.0.0
+        # Reliance on CLT hard path is yuck.
+        - --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
+test:
+  dependencies:
+    gnu.org/gmp: '*'
+  script: |
+    gcc --version | grep -q "tea-GCC-{{version}}"
+    gcc -o test1 test.c -lgmp
+    ./test1
+    g++ -o test2 test.cc
+    test "$(./test2)" = "Hello, world!"
+
+provides:
+  # shouldn't need to support these.
+  # - bin/{{hw.arch}}-{{##MANUFACTURER}}-{{hw.platform}}{{##KERNEL-VERSION}}-c++
+  # - bin/{{hw.arch}}-{{##MANUFACTURER}}-{{hw.platform}}{{##KERNEL-VERSION}}-g++
+  # - bin/{{hw.arch}}-{{##MANUFACTURER}}-{{hw.platform}}{{##KERNEL-VERSION}}-gcc
+  # - bin/{{hw.arch}}-{{##MANUFACTURER}}-{{hw.platform}}{{##KERNEL-VERSION}}-gcc-{{version}}
+  # - bin/{{hw.arch}}-{{##MANUFACTURER}}-{{hw.platform}}{{##KERNEL-VERSION}}-gcc-ar
+  # - bin/{{hw.arch}}-{{##MANUFACTURER}}-{{hw.platform}}{{##KERNEL-VERSION}}-gcc-nm
+  # - bin/{{hw.arch}}-{{##MANUFACTURER}}-{{hw.platform}}{{##KERNEL-VERSION}}-gcc-ranlib
+  - bin/c++
+  - bin/cpp
+  - bin/g++
+  - bin/gcc
+  - bin/gcc-ar
+  - bin/gcc-nm
+  - bin/gcc-ranlib
+  - bin/gcov
+  - bin/gcov-dump
+  - bin/gcov-tool
+  - bin/lto-dump
