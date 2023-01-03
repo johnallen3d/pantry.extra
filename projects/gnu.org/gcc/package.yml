@@ -42,7 +42,7 @@ build:
       - --disable-nls
     linux:
       ARGS:
-        - "--with-boot-ldflags=-static-libstdc++ -static-libgcc $LDFLAGS"
+        - --with-boot-ldflags="-static-libstdc++ -static-libgcc $LDFLAGS"
         - --disable-multilib
         - --enable-default-pie
     darwin:
