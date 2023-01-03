@@ -15,9 +15,6 @@ build:
   dependencies:
     tea.xyz/gx/cc: c99
     gnu.org/make: '*'
-    gnu.org/gmp: '>=4.2'
-    gnu.org/mpfr: '>=3.1.0'
-    gnu.org/mpc: '>=0.8.0'
     perl.org: '^5.6.1'
     gnu.org/patch: '*'
   script: |
@@ -31,7 +28,7 @@ build:
     mkdir build
     cd build
     ../configure $ARGS
-    make --jobs {{ hw.concurrency }} DESTDIR={{prefix}}
+    make --jobs {{ hw.concurrency }}
     make install
   env:
     ARGS:
@@ -55,8 +52,6 @@ build:
         - --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 
 test:
-  dependencies:
-    gnu.org/gmp: '*'
   script: |
     gcc --version | grep -q "tea-GCC-{{version}}"
     gcc -o test1 test.c -lgmp
