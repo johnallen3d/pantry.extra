@@ -22,6 +22,7 @@ build:
     # Apple Silicon support, located at https://github.com/iains/gcc-12-branch
     patch -p1 <props/aarch64.diff
 
+    # skip multilib prefixes for best interop
     sed -i.bak -e 's_m64=../lib64_m64=_' gcc/config/i386/t-linux64
     rm gcc/config/i386/t-linux64.bak
 
