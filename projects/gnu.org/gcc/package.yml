@@ -28,21 +28,31 @@ build:
 
     mkdir build
     cd build
-    ../configure $ARGS
+
+    # Note that env vars with spaces don't behave well, due to shells and life
+    # in general. So we handle those in script. Unless and until we decide to
+    # change to bash arrays, as in https://github.com/teaxyz/cli/pull/283,
+    # but that will have untold and unforseen consequences.
+
+    # convert ARGS to an array since we need space-including values
+    export ARGS=($ARGS --with-pkgversion="tea GCC {{version}}")
+    if test {{hw.platform}} = "linux"; then
+      export ARGS=("${ARGS[@]}" --with-boot-ldflags="-static-libstdc++ -static-libgcc $LDFLAGS")
+    fi
+
+    ../configure "${ARGS[@]}"
     make --jobs {{ hw.concurrency }}
     make install
   env:
     ARGS:
       - --prefix={{ prefix }}
       - --libdir={{ prefix }}/lib
-      - --with-pkgversion=tea-GCC-{{version}}
       - --enable-languages=c,c++,objc,obj-c++
       - --with-bugurl="https://github.com/teaxyz/pantry.extra/issues"
       - --disable-bootstrap
       - --disable-nls
     linux:
       ARGS:
-        - --with-boot-ldflags="-static-libstdc++ -static-libgcc $LDFLAGS"
         - --disable-multilib
         - --enable-default-pie
     darwin:
@@ -54,7 +64,7 @@ build:
 
 test:
   script: |
-    gcc --version | grep -q "tea-GCC-{{version}}"
+    gcc --version | grep -q "tea GCC {{version}}"
     gcc -o test1 test.c -lgmp
     ./test1
     g++ -o test2 test.cc
